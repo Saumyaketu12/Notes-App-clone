@@ -1,0 +1,52 @@
+@import "tailwindcss";
+/* @tailwind base;
+@tailwind components;
+@tailwind utilities; */
+
+
+/* small utility to style markdown preview */
+@import './markdown.css';
+
+
+/* @tailwind base;
+@tailwind components;
+@tailwind utilities; */
+
+/* theme variables on root and when html has .dark */
+:root {
+  --bg: #f8fafc;
+  /* --card: #ffffff;
+  --muted: #6b7280;
+  --accent: #2563eb;
+  --glass: rgba(255,255,255,0.6);
+  color-scheme: light; */
+  --text: #0b1220;
+}
+
+html.dark {
+  --bg: #0b1220;
+  /* --card: #071126;
+  --muted: #9ca3af;
+  --accent: #60a5fa;
+  --glass: rgba(10,12,20,0.5);
+  color-scheme: dark; */
+  --text: #f8fafc;
+}
+
+/* page background uses variable */
+body {
+  background: var(--bg);
+  /* color: inherit; */
+  color: var(--text);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* markdown preview */
+.prose {
+  color: inherit;
+}
+
+/* small UI tweaks */
+::-webkit-scrollbar { height: 8px; width: 8px; }
+::-webkit-scrollbar-thumb { background-color: rgba(0,0,0,0.12); border-radius: 999px; }
+::selection { background: rgba(37,99,235,0.15); }
