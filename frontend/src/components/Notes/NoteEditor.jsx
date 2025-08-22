@@ -6,6 +6,7 @@ import ReactMarkdown from 'react-markdown';
 import rehypeHighlight from 'rehype-highlight';
 import { FiBold, FiItalic, FiCode } from 'react-icons/fi';
 import useDebounce from '../../hooks/useDebounce';
+import DrawingCanvas from './DrawingCanvas';
 import toast from 'react-hot-toast';
 
 function wrapSelection(textarea, before, after) {
@@ -26,6 +27,8 @@ export default function NoteEditor({ title, setTitle, content, setContent, onSav
   const [preview, setPreview] = useState(true);
   const [saving, setSaving] = useState(false);
   const taRef = useRef();
+  const [showDrawing, setShowDrawing] = useState(false);
+
   // autosave via prop callback onSave (if provided)
   useDebounce(async () => {
     if (!onSave) return;
@@ -39,6 +42,7 @@ export default function NoteEditor({ title, setTitle, content, setContent, onSav
       toast.error('Save failed');
     }
   }, 2000, [title, content]);
+
   useEffect(() => {
     const onKey = (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
@@ -46,31 +50,63 @@ export default function NoteEditor({ title, setTitle, content, setContent, onSav
         onSave?.({ title, content });
         toast.success('Saved');
       }
-      if (e.key === 'n' &&!e.metaKey &&!e.ctrlKey) {
-        // handled by app-level shortcut to create a note
-      }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  },);
+  }, [title, content, onSave]);
+
+  // inside NoteEditor component (replace existing handleInsertDrawing)
+  async function handleInsertDrawing(urlOrData) {
+    // Insert image markdown at cursor
+    const ta = taRef.current;
+    if (!ta) return;
+    const markdown = `![](${urlOrData})`;
+    const start = ta.selectionStart || 0;
+    const end = ta.selectionEnd || 0;
+    const val = ta.value || '';
+    const newVal = val.slice(0, start) + markdown + val.slice(end);
+
+    // update textarea and local state
+    ta.value = newVal;
+    if (typeof setContent === 'function') setContent(newVal);
+
+    // move caret and focus
+    const pos = start + markdown.length;
+    ta.selectionStart = ta.selectionEnd = pos;
+    ta.focus();
+
+    // Persist the note immediately (so share will include the image)
+    if (typeof onSave === 'function') {
+      try {
+        // Call onSave with latest title + content and wait for it (onSave should call notesService.updateNote)
+        await onSave({ title, content: newVal });
+        toast?.success?.('Drawing inserted and note saved');
+      } catch (err) {
+        console.error('Failed to save note after inserting drawing', err);
+        toast?.error?.('Inserted drawing but failed to save note');
+        // still close the modal — content updated locally
+      }
+    } else {
+      // No onSave provided — just give user feedback (note is updated in state)
+      toast?.success?.('Drawing inserted (not auto-saved)');
+    }
+
+    setShowDrawing(false);
+  }
+
+
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between gap-3">
-        <input value={title} onChange={e=>setTitle(e.target.value)} placeholder="Title" className="text-2xl font-semibold w-full bg-transparent border-b pb-2" />
+      <div className="p-3 border rounded">
+        <div className="flex items-center gap-2 mb-3">
+          <button onClick={() => wrapSelection(taRef.current, '**', '**')} className="px-3 py-1 hover:bg-gray-100 rounded"><FiBold /></button>
+          <button onClick={() => wrapSelection(taRef.current, '_', '_')} className="px-3 py-1 hover:bg-gray-100 rounded"><FiItalic /></button>
+          <button onClick={() => wrapSelection(taRef.current, '`', '`')} className="px-3 py-1 hover:bg-gray-100 rounded"><FiCode /></button>
 
-        <div className="flex items-center gap-3 text-sm text-muted">
-          <div>{saving? 'Saving…' : 'Saved'}</div>
-          <button onClick={() => setPreview(p =>!p)} className="px-3 py-1 border rounded">{preview? 'Edit' : 'Preview'}</button>
-        </div>
-      </div>
+          <button className="px-3 py-1 mr-2 bg-indigo-600 text-white rounded" onClick={() => setShowDrawing(true)}>Open Drawing Editor</button>
 
-      <div className="bg-card border rounded-2xl shadow-soft overflow-hidden bg-[var(--color-bg-card)]">
-        <div className="flex items-center gap-2 p-3 border-b">
-          <button onClick={() => wrapSelection(taRef.current, '**', '**')} title="Bold" className="p-2 hover:bg-[var(--color-bg-hover)] rounded"><FiBold /></button>
-          <button onClick={() => wrapSelection(taRef.current, '_', '_')} title="Italic" className="p-2 hover:bg-[var(--color-bg-hover)] rounded"><FiItalic /></button>
-          <button onClick={() => wrapSelection(taRef.current, '`', '`')} title="Code" className="p-2 hover:bg-[var(--color-bg-hover)] rounded"><FiCode /></button>
           <div className="flex-1" />
-          <div className="text-xs text-muted">Markdown enabled • <kbd className="px-1 border rounded">Ctrl/Cmd</kbd> + <kbd className="px-1 border rounded">S</kbd> to save</div>
+          <div className="text-xs text-muted">Markdown enabled — press <kbd className="px-1 border rounded">Ctrl</kbd> + <kbd className="px-1 border rounded">S</kbd> to save</div>
         </div>
 
         <div className="md:flex">
@@ -85,11 +121,15 @@ export default function NoteEditor({ title, setTitle, content, setContent, onSav
 
           {preview && (
             <div className="md:w-1/2 p-4 overflow-auto prose max-w-none">
-              <ReactMarkdown rehypePlugins={[rehypeHighlight]}>{content || '*Nothing to preview*'}</ReactMarkdown>
+              <ReactMarkdown rehypePlugins={[rehypeHighlight]}>
+                {content || '*Nothing to preview*'}
+              </ReactMarkdown>
             </div>
           )}
         </div>
       </div>
+
+      {showDrawing && <DrawingCanvas onInsert={handleInsertDrawing} onClose={() => setShowDrawing(false)} />}
     </div>
   );
 }

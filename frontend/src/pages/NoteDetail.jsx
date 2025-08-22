@@ -8,6 +8,7 @@ import ShareModal from "../components/Notes/ShareModal";
 import * as notesService from "../services/notesService";
 import { useAuth } from "../hooks/useAuth";
 import useDebounce from "../hooks/useDebounce";
+import toast from 'react-hot-toast';
 
 export default function NoteDetail() {
   const { id } = useParams();
@@ -18,6 +19,32 @@ export default function NoteDetail() {
   const [content, setContent] = useState("");
   const [saving, setSaving] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
+
+
+  async function handleSaveNote({ title: newTitle, content: newContent }) {
+    try {
+      // if you already have note id => update, otherwise create
+      if (id) {
+        // your notesService.updateNote signature earlier is (token, id, patch)
+        await notesService.updateNote(token, id, { title: newTitle, content: newContent });
+        setTitle(newTitle);
+        setContent(newContent);
+        return true;
+      } else {
+        // if creating a new note (no id yet)
+        const created = await notesService.createNote(token, { title: newTitle, content: newContent });
+        // if your createNote returns created note with id, you might want to navigate to it:
+        if (created && created._id) {
+          navigate(`/notes/${created._id}`);
+        }
+        return true;
+      }
+    } catch (err) {
+      console.error('save note failed', err);
+      throw err;
+    }
+  }
+
 
   useEffect(() => {
     let mounted = true;
@@ -127,6 +154,7 @@ export default function NoteDetail() {
               setTitle={setTitle}
               content={content}
               setContent={setContent}
+              onSave={handleSaveNote}
             />
             <div className="mt-4">
               <ShareModal shareUrl={shareUrl} onCreate={createShare} />
