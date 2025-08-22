@@ -1,21 +1,12 @@
-import React from 'react'
-import { createRoot } from 'react-dom/client'
-import App from './App'
-import './styles/index.css'
-import useTheme from './hooks/useTheme';
-import 'highlight.js/styles/github.css';
+// src/Main.jsx
+
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import App from './App';
 import { ThemeProvider } from './contexts/ThemeContext';
 import ToastProvider from './components/UI/ToastProvider';
-
-
-
-// function Root() {
-//   useTheme(); // Initialize theme hook to apply theme styles
-//   return <App />;
-// }
-// createRoot(document.getElementById('root')).render(<Root/>);
-
-
+import './styles/index.css';
+import 'highlight.js/styles/github.css';
 
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>

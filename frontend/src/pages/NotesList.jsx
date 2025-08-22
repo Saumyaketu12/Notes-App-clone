@@ -1,3 +1,5 @@
+//not needed anymore
+import { useAuth } from "../hooks/useAuth";
 import React, { useState } from "react";
 import Header from "../components/Layout/Header";
 import NoteList from "../components/Notes/NoteList";

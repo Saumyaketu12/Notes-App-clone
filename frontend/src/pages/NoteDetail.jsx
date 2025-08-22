@@ -1,3 +1,5 @@
+// src/pages/NoteDetail.jsx
+
 import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import Header from "../components/Layout/Header";
@@ -16,6 +18,7 @@ export default function NoteDetail() {
   const [content, setContent] = useState("");
   const [saving, setSaving] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
+
   useEffect(() => {
     let mounted = true;
     notesService.getNote(token, id).then((r) => {
@@ -51,14 +54,15 @@ export default function NoteDetail() {
     await notesService.deleteNote(token, id);
     navigate("/");
   };
+
   const togglePublic = async () => {
     const res = await notesService.updateNote(token, id, {
       isPublic: !note.isPublic,
     });
     if (!res.error) {
       setNote((v) => ({
-        ...v,
-        isPublic: !v.isPublic,
+      ...v,
+        isPublic:!v.isPublic,
         shareId: res.shareId || v.shareId,
       }));
       if (!note.isPublic && res.shareId)
@@ -66,16 +70,17 @@ export default function NoteDetail() {
       if (note.isPublic) setShareUrl("");
     }
   };
+
   const createShare = async () => {
     const res = await notesService.createShare(token, id);
     if (res.shareUrl) setShareUrl(res.shareUrl);
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[var(--color-bg-primary)]">
       <Header />
       <main className="p-6">
-        {!note ? (
+        {!note? (
           <div>Loading…</div>
         ) : (
           <div>
@@ -87,34 +92,36 @@ export default function NoteDetail() {
                   className="text-2xl font-semibold w-full bg-transparent border-b p-1"
                   placeholder="Title"
                 />
-                <div className="text-sm text-gray-500">
-                  {saving ? "Saving…" : "Saved"}
+                <div className="text-sm text-muted">
+                  {saving? "Saving…" : "Saved"}
                 </div>
               </div>
               <div className="flex gap-2">
                 <button
                   onClick={togglePublic}
-                  className="px-3 py-2 bg-yellow-400 rounded"
+                  className="px-3 py-2 rounded transition-transform transform hover:scale-105"
+                  style={{ backgroundColor: `var(--color-accent-yellow)`}}
                 >
-                  {note.isPublic ? "Make Private" : "Make Public"}
+                  {note.isPublic? "Make Private" : "Make Public"}
                 </button>
                 <button
                   onClick={() => {}}
-                  className="px-3 py-2 bg-blue-600 text-white rounded"
+                  className="px-3 py-2 bg-[var(--color-accent-blue)] text-white rounded transition-transform transform hover:scale-105"
                 >
                   Share
                 </button>
                 <button
                   onClick={remove}
-                  className="px-3 py-2 bg-red-500 text-white rounded"
+                  className="px-3 py-2 bg-[var(--color-accent-red)] text-white rounded transition-transform transform hover:scale-105"
                 >
                   Delete
                 </button>
-                <Link to="/" className="px-3 py-2 bg-gray-200 rounded">
+                <Link to="/" className="px-3 py-2 bg-gray-200 rounded transition-transform transform hover:scale-105">
                   Back
                 </Link>
               </div>
             </div>
+
             <NoteEditor
               title={title}
               setTitle={setTitle}

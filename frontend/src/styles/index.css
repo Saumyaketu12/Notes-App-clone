@@ -1,52 +1,82 @@
-@import "tailwindcss";
-/* @tailwind base;
-@tailwind components;
-@tailwind utilities; */
+/* src/styles/index.css */
 
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    /* Semantic Colors for Light Mode */
+    --color-bg-primary: #f8fafc;
+    --color-bg-card: #ffffff;
+    --color-text-primary: #0b1220;
+    --color-text-muted: #6b7280;
+    --color-accent-blue: #2563eb;
+    --color-accent-green: #16a34a;
+    --color-accent-yellow: #fde047;
+    --color-accent-red: #ef4444;
+    --color-border-card: transparent;
+    --color-shadow-card: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --color-bg-input: #f9fafb;
+    --color-bg-hover: #f3f4f6;
+    --color-text-link: #2563eb;
+    --color-bg-link-hover: #e5e7eb;
+    --color-bg-note-badge: #dcfce7;
+    --color-text-note-badge: #16a34a;
+    --color-bg-sidebar-item-active: #f3f4f6;
+    --color-text-sidebar-item-active: #1f2937;
+    --color-bg-sidebar-item-hover: #f9fafb;
+    --color-text-sidebar-item-hover: #374151;
+    color-scheme: light;
+  }
+
+  html.dark {
+    /* Semantic Colors for Dark Mode */
+    --color-bg-primary: #0b1220;
+    --color-bg-card: #071126;
+    --color-text-primary: #f8fafc;
+    --color-text-muted: #9ca3af;
+    --color-accent-blue: #60a5fa;
+    --color-accent-green: #4ade80;
+    --color-accent-yellow: #fcd34d;
+    --color-accent-red: #f87171;
+    --color-border-card: #1f2937;
+    --color-shadow-card: none;
+    --color-bg-input: #041023;
+    --color-bg-hover: rgba(255, 255, 255, 0.05);
+    --color-text-link: #60a5fa;
+    --color-bg-link-hover: rgba(255, 255, 255, 0.03);
+    --color-bg-note-badge: #14532d;
+    --color-text-note-badge: #4ade80;
+    --color-bg-sidebar-item-active: rgba(255, 255, 255, 0.05);
+    --color-text-sidebar-item-active: #f3f4f6;
+    --color-bg-sidebar-item-hover: rgba(255, 255, 255, 0.03);
+    --color-text-sidebar-item-hover: #d1d5db;
+    color-scheme: dark;
+  }
+}
+
+/* Page background uses variable */
+body {
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Form shake animation */
+@keyframes shake {
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(2px); }
+  30%, 50%, 70% { transform: translateX(-4px); }
+  40%, 60% { transform: translateX(4px); }
+}
+
+.animate-shake {
+  animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
 
 /* small utility to style markdown preview */
 @import './markdown.css';
 
-
-/* @tailwind base;
-@tailwind components;
-@tailwind utilities; */
-
-/* theme variables on root and when html has .dark */
-:root {
-  --bg: #f8fafc;
-  /* --card: #ffffff;
-  --muted: #6b7280;
-  --accent: #2563eb;
-  --glass: rgba(255,255,255,0.6);
-  color-scheme: light; */
-  --text: #0b1220;
-}
-
-html.dark {
-  --bg: #0b1220;
-  /* --card: #071126;
-  --muted: #9ca3af;
-  --accent: #60a5fa;
-  --glass: rgba(10,12,20,0.5);
-  color-scheme: dark; */
-  --text: #f8fafc;
-}
-
-/* page background uses variable */
-body {
-  background: var(--bg);
-  /* color: inherit; */
-  color: var(--text);
-  transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-/* markdown preview */
-.prose {
-  color: inherit;
-}
-
-/* small UI tweaks */
+/* Other global styles */
 ::-webkit-scrollbar { height: 8px; width: 8px; }
 ::-webkit-scrollbar-thumb { background-color: rgba(0,0,0,0.12); border-radius: 999px; }
 ::selection { background: rgba(37,99,235,0.15); }

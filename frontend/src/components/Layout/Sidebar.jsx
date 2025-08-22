@@ -1,9 +1,11 @@
+// src/components/Layout/Sidebar.jsx
+
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { FiPlus, FiStar, FiArchive, FiSettings } from 'react-icons/fi';
 
 const Item = ({ to, icon: Icon, children }) => (
-  <NavLink to={to} className={({ isActive }) => `flex items-center gap-2 px-3 py-2 rounded-md text-sm ${isActive ? 'bg-gray-100 dark:bg-white/5 font-medium' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/3'}`}>
+  <NavLink to={to} className={({ isActive }) => `flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors duration-200 ${isActive? 'bg-[var(--color-bg-sidebar-item-active)] text-[var(--color-text-sidebar-item-active)] font-medium' : 'text-text-primary text-[var(--color-text-primary)] hover:bg-[var(--color-bg-sidebar-item-hover)] hover:text-[var(--color-text-sidebar-item-hover)]'}`}>
     <Icon className="text-lg" />
     <span>{children}</span>
   </NavLink>
@@ -11,9 +13,9 @@ const Item = ({ to, icon: Icon, children }) => (
 
 export default function Sidebar(){
   return (
-    <aside className="w-64 bg-white dark:bg-card border-r p-4 hidden md:block">
+    <aside className="w-64 bg-card border-r p-4 hidden md:block bg-[var(--color-bg-card)] transition-colors duration-300">
       <div className="mb-6">
-        <div className="text-xs text-gray-500 mb-2">Quick</div>
+        <div className="text-xs text-muted mb-2">Quick</div>
         <Item to="/create" icon={FiPlus}>Create note</Item>
       </div>
 
@@ -24,7 +26,7 @@ export default function Sidebar(){
         <Item to="/settings" icon={FiSettings}>Settings</Item>
       </nav>
 
-      <div className="mt-6 text-xs text-gray-500">Tips: Press <span className="font-medium">N</span> to create note</div>
+      <div className="mt-6 text-xs text-muted">Tips: Press <span className="font-medium">N</span> to create note</div>
     </aside>
   );
 }

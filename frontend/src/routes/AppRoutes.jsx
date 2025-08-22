@@ -1,36 +1,44 @@
-import React from "react";
+// src/routes/AppRoutes.jsx
+
+import React, { lazy, Suspense } from "react";
 import { Routes, Route } from "react-router-dom";
-import Login from "../pages/Login";
-import Register from "../pages/Register";
-import NotesList from "../pages/NotesList";
-import NoteDetail from "../pages/NoteDetail";
-import PublicNote from "../pages/PublicNote";
-import NotFound from "../pages/NotFound";
 import RequireAuth from "./RequireAuth";
+
+// Lazy load route-level components
+const Login = lazy(() => import("../pages/Login"));
+const Register = lazy(() => import("../pages/Register"));
+const Home = lazy(() => import("../pages/Home"));
+const NoteDetail = lazy(() => import("../pages/NoteDetail"));
+const PublicNote = lazy(() => import("../pages/PublicNote"));
+const NotFound = lazy(() => import("../pages/NotFound"));
 
 export default function AppRoutes() {
   return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      <Route path="/s/:shareId" element={<PublicNote />} />
-      <Route
-        path="/notes/:id"
-        element={
-          <RequireAuth>
-            <NoteDetail />
-          </RequireAuth>
-        }
-      />
-      <Route
-        path="/"
-        element={
-          <RequireAuth>
-            <NotesList />
-          </RequireAuth>
-        }
-      />
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+    <Suspense fallback={<div className="p-6">Loading...</div>}>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/s/:shareId" element={<PublicNote />} />
+        <Route path="*" element={<NotFound />} />
+        
+        {/* Protected Routes */}
+        <Route
+          path="/notes/:id"
+          element={
+            <RequireAuth>
+              <NoteDetail />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/"
+          element={
+            <RequireAuth>
+              <Home />
+            </RequireAuth>
+          }
+        />
+      </Routes>
+    </Suspense>
   );
 }
