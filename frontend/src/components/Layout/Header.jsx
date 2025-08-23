@@ -1,7 +1,7 @@
 // src/components/Layout/Header.jsx
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FiSearch, FiSun, FiMoon } from 'react-icons/fi';
+import { FiSearch, FiSun, FiMoon, FiUser } from 'react-icons/fi';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -37,8 +37,11 @@ export default function Header() {
 
           {user? (
             <div className="flex items-center gap-3">
-              <div className="text-sm text-text-primary text-[var(--color-text-primary)]">{user.name}</div>
-              <button onClick={logout} className="px-3 py-1 rounded-md bg-red-50 text-accent-red text-sm">Sign out</button>
+              <div className="flex items-center gap-2 text-sm text-[var(--color-text-primary)]">
+                <FiUser className="w-4 h-4" />
+                <span>{user.name}</span>
+              </div>
+              <button onClick={logout} className="px-3 py-1 rounded-md bg-red-400 text-accent-red text-sm">Sign out</button>
             </div>
           ) : (
             <Link to="/login" className="px-3 py-2 bg-[var(--color-accent-blue)] text-white rounded-md transition-transform transform hover:scale-105">Sign in</Link>

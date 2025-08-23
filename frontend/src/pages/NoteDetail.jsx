@@ -9,11 +9,13 @@ import * as notesService from "../services/notesService";
 import { useAuth } from "../hooks/useAuth";
 import useDebounce from "../hooks/useDebounce";
 import toast from 'react-hot-toast';
+import NoteHeader from "../components/Notes/NoteHeader";
 
 export default function NoteDetail() {
   const { id } = useParams();
   const { token } = useAuth();
   const navigate = useNavigate();
+  //Enhance State Management for User Experience in future
   const [note, setNote] = useState(null);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -111,44 +113,14 @@ export default function NoteDetail() {
           <div>Loading…</div>
         ) : (
           <div>
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <input
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  className="text-2xl font-semibold w-full bg-transparent border-b p-1"
-                  placeholder="Title"
-                />
-                <div className="text-sm text-muted">
-                  {saving? "Saving…" : "Saved"}
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={togglePublic}
-                  className="px-3 py-2 rounded transition-transform transform hover:scale-105"
-                  style={{ backgroundColor: `var(--color-accent-yellow)`}}
-                >
-                  {note.isPublic? "Make Private" : "Make Public"}
-                </button>
-                <button
-                  onClick={() => {}}
-                  className="px-3 py-2 bg-[var(--color-accent-blue)] text-white rounded transition-transform transform hover:scale-105"
-                >
-                  Share
-                </button>
-                <button
-                  onClick={remove}
-                  className="px-3 py-2 bg-[var(--color-accent-red)] text-white rounded transition-transform transform hover:scale-105"
-                >
-                  Delete
-                </button>
-                <Link to="/" className="px-3 py-2 bg-gray-200 rounded transition-transform transform hover:scale-105">
-                  Back
-                </Link>
-              </div>
-            </div>
-
+            <NoteHeader
+              note={note}
+              title={title}
+              setTitle={setTitle}
+              saving={saving}
+              onTogglePublic={togglePublic}
+              onDelete={remove}
+            />
             <NoteEditor
               title={title}
               setTitle={setTitle}

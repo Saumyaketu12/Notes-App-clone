@@ -103,7 +103,7 @@ export default function NoteEditor({ title, setTitle, content, setContent, onSav
           <button onClick={() => wrapSelection(taRef.current, '_', '_')} className="px-3 py-1 hover:bg-gray-100 rounded"><FiItalic /></button>
           <button onClick={() => wrapSelection(taRef.current, '`', '`')} className="px-3 py-1 hover:bg-gray-100 rounded"><FiCode /></button>
 
-          <button className="px-3 py-1 mr-2 bg-indigo-600 text-white rounded" onClick={() => setShowDrawing(true)}>Open Drawing Editor</button>
+          <button className="px-3 py-1 mr-2 bg-indigo-600 text-white rounded hover:opacity-90 transition-colors" onClick={() => setShowDrawing(true)}>Open Drawing Editor</button>
 
           <div className="flex-1" />
           <div className="text-xs text-muted">Markdown enabled — press <kbd className="px-1 border rounded">Ctrl</kbd> + <kbd className="px-1 border rounded">S</kbd> to save</div>
