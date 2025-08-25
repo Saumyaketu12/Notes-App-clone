@@ -1,5 +1,6 @@
 // src/components/Notes/DrawingCanvas.jsx
 import React, { useRef, useState, useEffect } from 'react';
+import axios from 'axios'; // Import axios for direct Cloudinary upload
 
 export default function DrawingCanvas({ onInsert, onClose }) {
   const canvasRef = useRef(null);
@@ -10,6 +11,10 @@ export default function DrawingCanvas({ onInsert, onClose }) {
   const [startPos, setStartPos] = useState(null);
   const undoStack = useRef([]);
   const redoStack = useRef([]);
+
+  // Cloudinary configuration from environment variables
+  const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+  const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -180,18 +185,29 @@ export default function DrawingCanvas({ onInsert, onClose }) {
   }
 
   async function uploadDataUrl(dataUrl) {
-    // convert dataUrl to blob
+    if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_UPLOAD_PRESET) {
+      console.error('Cloudinary credentials not set in environment variables.');
+      // Fallback to dataUrl if Cloudinary is not configured
+      return dataUrl;
+    }
+
+    // Convert dataUrl to Blob
     const res = await fetch(dataUrl);
     const blob = await res.blob();
-    const fd = new FormData();
-    fd.append('file', blob, 'drawing.png');
+
+    const formData = new FormData();
+    formData.append("file", blob);
+    formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET); // Use unsigned preset
+
     try {
-      const resp = await fetch('/api/uploads', { method: 'POST', body: fd });
-      const json = await resp.json();
-      if (json && json.url) return json.url;
-      return dataUrl;
+      const cloudinaryResponse = await axios.post(
+        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+        formData
+      );
+      return cloudinaryResponse.data.secure_url;
     } catch (err) {
-      console.error('Upload failed', err);
+      console.error('Cloudinary upload failed', err);
+      // Fallback to dataUrl if upload fails
       return dataUrl;
     }
   }
