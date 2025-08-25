@@ -5,39 +5,36 @@ const api = axios.create({
 });
 
 //
-
 export async function apiGet(path, token) {
-  const res = await fetch(path, {
+  const res = await api.get(path, {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
-  return res.json();
+  return res.data;
 }
+
 export async function apiPost(path, body, token) {
-  const res = await fetch(path, {
-    method: "POST",
+  const res = await api.post(path, body, {
     headers: {
       "Content-Type": "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
-    body: JSON.stringify(body),
   });
-  return res.json();
+  return res.data;
 }
+
 export async function apiPut(path, body, token) {
-  const res = await fetch(path, {
-    method: "PUT",
+  const res = await api.put(path, body, {
     headers: {
       "Content-Type": "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
-    body: JSON.stringify(body),
   });
-  return res.json();
+  return res.data;
 }
+
 export async function apiDelete(path, token) {
-  const res = await fetch(path, {
-    method: "DELETE",
+  const res = await api.delete(path, {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
-  return res.json();
+  return res.data;
 }
