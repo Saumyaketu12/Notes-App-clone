@@ -23,10 +23,13 @@ app.use(express.json({ limit: '5mb' })); // increase limit if needed
 app.use(morgan('dev'));
 // app.use(cors({ origin: APP_ORIGIN || true }));
 app.use(cors({
-  origin: APP_ORIGIN || "https://saumyaketu-notes-app.onrender.com",
-  methods: ["GET", "POST", "PUT", "DELETE"],
+  origin: [
+    'http://localhost:5173',  // vite dev
+    'https://saumyaketu-notes-app.onrender.com', // deployed frontend
+  ],
   credentials: true,
 }));
+
 
 
 // Serve uploaded files (public)
