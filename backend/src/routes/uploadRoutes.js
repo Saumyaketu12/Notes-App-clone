@@ -1,4 +1,3 @@
-/*
 import express from 'express';
 import multer from 'multer';
 import { CloudinaryStorage } from 'multer-storage-cloudinary';
@@ -32,5 +31,3 @@ router.post('/', upload.single('file'), (req, res) => {
 });
 
 export default router;
-
-*/

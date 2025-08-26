@@ -13,8 +13,8 @@ export default function DrawingCanvas({ onInsert, onClose }) {
   const redoStack = useRef([]);
 
   // Cloudinary configuration from environment variables
-  const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
-  const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
+  // const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+  // const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -185,30 +185,48 @@ export default function DrawingCanvas({ onInsert, onClose }) {
   }
 
   async function uploadDataUrl(dataUrl) {
-    if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_UPLOAD_PRESET) {
-      console.error('Cloudinary credentials not set in environment variables.');
-      // Fallback to dataUrl if Cloudinary is not configured
-      return dataUrl;
-    }
+    // if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_UPLOAD_PRESET) {
+    //   console.error('Cloudinary credentials not set in environment variables.');
+    //   // Fallback to dataUrl if Cloudinary is not configured
+    //   return dataUrl;
+    // }
 
     // Convert dataUrl to Blob
     const res = await fetch(dataUrl);
     const blob = await res.blob();
 
-    const formData = new FormData();
-    formData.append("file", blob);
-    formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET); // Use unsigned preset
+    //This is to upload the picture directly from frontend to cloudinary
+    // const formData = new FormData();
+    // formData.append("file", blob);
+    // formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET); // Use unsigned preset
 
+    // try {
+    //   const cloudinaryResponse = await axios.post(
+    //     `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+    //     formData
+    //   );
+    //   return cloudinaryResponse.data.secure_url;
+    // } catch (err) {
+    //   console.error('Cloudinary upload failed', err);
+    //   // Fallback to dataUrl if upload fails
+    //   return dataUrl;
+    // }
+
+    const fd = new FormData();
+    fd.append('file', blob, 'drawing.png');
     try {
-      const cloudinaryResponse = await axios.post(
-        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
-        formData
-      );
-      return cloudinaryResponse.data.secure_url;
+      // Send to your backend's /api/uploads endpoint
+      const resp = await axios.post('/api/uploads', fd, {
+        headers: {
+          'Content-Type': 'multipart/form-data', // Important for FormData
+        },
+      });
+      const json = resp.data; // axios automatically parses JSON
+      if (json && json.url) return json.url;
+      return dataUrl; // Fallback to dataUrl if backend doesn't return a URL
     } catch (err) {
-      console.error('Cloudinary upload failed', err);
-      // Fallback to dataUrl if upload fails
-      return dataUrl;
+      console.error('Upload to backend failed', err);
+      return dataUrl; // Fallback to dataUrl if upload fails
     }
   }
 

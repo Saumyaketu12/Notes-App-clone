@@ -33,15 +33,15 @@ app.use(cors({
 
 
 // Serve uploaded files (public) - This might not be needed if all uploads are external
-// app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/notes', noteRoutes);
 
 // Upload route (mount)
-// import uploadRoutes from './routes/uploadRoutes.js';
-// app.use('/api/uploads', uploadRoutes);
+import uploadRoutes from './routes/uploadRoutes.js';
+app.use('/api/uploads', uploadRoutes);
 
 // Health
 app.get('/health', (req, res) => res.json({ ok: true }));
