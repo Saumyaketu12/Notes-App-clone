@@ -8,7 +8,7 @@ function canAccess(note, userId) {
   if (!note) return false;
   if (note.isPublic) return true;
   if (note.owner && note.owner.toString() === userId.toString()) return true;
-  if (note.collaborators && note.collaborators.some(c => c.toString() === userId.toString())) return true;
+  if (note.collaborators && note.collaborators.some(c => c.toString() === userId.toString())) return false; // Fix: was `true`
   return false;
 }
 
@@ -85,33 +85,60 @@ export async function updateNote(req, res) {
 
     if (!note) return res.status(404).json({ error: 'Note not found' });
 
+    // Check ownership or collaboration
     if (note.owner.toString() !== userId.toString() && !(note.collaborators || []).some(c => c.toString() === userId.toString())) {
       return res.status(403).json({ error: 'Forbidden' });
     }
-
-    // Save version snapshot
-    note.versions = note.versions || [];
-    note.versions.push({
+    
+    // Save version snapshot before update
+    const versions = note.versions || [];
+    versions.push({
       title: note.title,
       content: note.content,
       savedAt: new Date(),
       savedBy: userId
     });
-    if (note.versions.length > 50) note.versions = note.versions.slice(-50);
+    // Keep only the last 50 versions
+    const latestVersions = versions.slice(-50);
 
-    // Update fields
-    if (typeof patch.title !== 'undefined') note.title = patch.title;
-    if (typeof patch.content !== 'undefined') note.content = patch.content;
+    const updateDoc = {
+      $set: {
+        title: patch.title,
+        content: patch.content
+      },
+      $push: {
+        versions: {
+          $each: [{
+            title: note.title,
+            content: note.content,
+            savedAt: new Date(),
+            savedBy: userId
+          }],
+          $slice: -50
+        }
+      },
+      $inc: { __v: 1 } // Manually increment the version key
+    };
+
     if (typeof patch.isPublic !== 'undefined') {
-      note.isPublic = !!patch.isPublic;
-      if (note.isPublic && !note.shareId) {
-        note.shareId = generateShareId();
+      updateDoc.$set.isPublic = !!patch.isPublic;
+      if (updateDoc.$set.isPublic && !note.shareId) {
+        updateDoc.$set.shareId = generateShareId();
       }
     }
 
-    await note.save();
-    console.log('Note successfully updated:', note);
-    return res.json({ _id: note._id, shareId: note.shareId });
+    const updatedNote = await Note.findByIdAndUpdate(
+      id,
+      updateDoc,
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedNote) {
+        return res.status(404).json({ error: 'Note not found' });
+    }
+    
+    console.log('Note successfully updated:', updatedNote);
+    return res.json({ _id: updatedNote._id, shareId: updatedNote.shareId });
   } catch (err) {
     console.error('Error in updateNote:', err);
     return res.status(500).json({ error: err.message });
