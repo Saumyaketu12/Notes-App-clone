@@ -38,12 +38,16 @@ export async function listNotes(req, res) {
 // POST /api/notes
 export async function createNote(req, res) {
   try {
+    console.log('Incoming POST request to create note.');
+    console.log('Request Body:', req.body);
     const userId = req.user.userId;
     const { title = '', content = '' } = req.body || {};
     const note = new Note({ owner: userId, title, content });
     await note.save();
+    console.log('Note successfully created:', note);
     return res.json(note);
   } catch (err) {
+    console.error('Error creating note:', err);
     return res.status(500).json({ error: err.message });
   }
 }
@@ -68,11 +72,17 @@ export async function getNote(req, res) {
 // PUT /api/notes/:id
 export async function updateNote(req, res) {
   try {
+    console.log('Incoming PUT request to update note.');
+    console.log('Note ID:', req.params.id);
+    console.log('Request Body:', req.body);
+    
     const userId = req.user.userId;
     const id = req.params.id;
     const patch = req.body || {};
 
     const note = await Note.findById(id);
+    console.log('Note found for update:', note);
+
     if (!note) return res.status(404).json({ error: 'Note not found' });
 
     if (note.owner.toString() !== userId.toString() && !(note.collaborators || []).some(c => c.toString() === userId.toString())) {
@@ -100,8 +110,10 @@ export async function updateNote(req, res) {
     }
 
     await note.save();
+    console.log('Note successfully updated:', note);
     return res.json({ _id: note._id, shareId: note.shareId });
   } catch (err) {
+    console.error('Error in updateNote:', err);
     return res.status(500).json({ error: err.message });
   }
 }
