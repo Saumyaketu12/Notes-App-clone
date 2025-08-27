@@ -1,176 +1,139 @@
-import { useState, useEffect, useContext } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { NotesContext } from '../contexts/NotesContext';
-import { AuthContext } from '../contexts/AuthContext';
-import NoteEditor from '../components/Notes/NoteEditor';
-import NoteHeader from '../components/Notes/NoteHeader';
-import Modal from '../components/UI/Modal';
-import Spinner from '../components/UI/Spinner';
-import { updateNote, getNote, shareNote } from '../services/notesService';
-import { useDebounce } from '../hooks/useDebounce';
-import { toast } from 'react-toastify';
-import ShareModal from '../components/Notes/ShareModal';
-import apiClient from '../services/apiClient';
+// src/pages/NoteDetail.jsx
 
-const NoteDetail = () => {
+import React, { useEffect, useState } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import Header from "../components/Layout/Header";
+import NoteEditor from "../components/Notes/NoteEditor";
+import ShareModal from "../components/Notes/ShareModal";
+import * as notesService from "../services/notesService";
+import { useAuth } from "../hooks/useAuth";
+import useDebounce from "../hooks/useDebounce";
+import toast from 'react-hot-toast';
+import NoteHeader from "../components/Notes/NoteHeader";
+
+export default function NoteDetail() {
   const { id } = useParams();
+  const { token } = useAuth();
   const navigate = useNavigate();
-  const { notes, setNotes } = useContext(NotesContext);
-  const { user } = useContext(AuthContext);
-
+  //Enhance State Management for User Experience in future
   const [note, setNote] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [shareModalOpen, setShareModalOpen] = useState(false);
-  const [shareUrl, setShareUrl] = useState('');
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [shareUrl, setShareUrl] = useState("");
 
-  const debouncedContent = useDebounce(note?.content, 1000);
-  const debouncedTitle = useDebounce(note?.title, 1000);
 
-  useEffect(() => {
-    // This effect runs only when the component mounts or id changes
-    const fetchNote = async () => {
-      try {
-        setLoading(true);
-        const fetchedNote = await getNote(id);
-        setNote(fetchedNote);
-        setError(null);
-      } catch (err) {
-        setError(err.response?.data?.error || 'Failed to fetch note');
-        setNote(null);
-      } finally {
-        setLoading(false);
+  async function handleSaveNote({ title: newTitle, content: newContent }) {
+    try {
+      // if you already have note id => update, otherwise create
+      if (id) {
+        // your notesService.updateNote signature earlier is (token, id, patch)
+        await notesService.updateNote(token, id, { title: newTitle, content: newContent });
+        setTitle(newTitle);
+        setContent(newContent);
+        return true;
+      } else {
+        // if creating a new note (no id yet)
+        const created = await notesService.createNote(token, { title: newTitle, content: newContent });
+        // if your createNote returns created note with id, you might want to navigate to it:
+        if (created && created._id) {
+          navigate(`/notes/${created._id}`);
+        }
+        return true;
       }
-    };
-    fetchNote();
-  }, [id]);
-
-  useEffect(() => {
-    // This effect handles the debounced auto-save logic
-    if (note && !loading) {
-      handleUpdateNote();
-    }
-  }, [debouncedContent, debouncedTitle]);
-
-
-  const uploadImageToCloudinary = async (base64Data) => {
-    try {
-      // Use the apiClient to post the image
-      const response = await apiClient.post('/uploads', { file: base64Data }, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      return response.data.url;
     } catch (err) {
-      console.error('Error uploading to Cloudinary:', err);
-      toast.error('Failed to upload image. Please try again.');
-      throw new Error('Image upload failed');
+      console.error('save note failed', err);
+      throw err;
     }
-  };
-
-  const handleUpdateNote = async () => {
-    if (!note) return;
-
-    // Check for base64 image data in the content
-    const base64Regex = /!\[.*?\]\((data:image\/[a-zA-Z0-9+./;=]+)\)/g;
-    let newContent = note.content;
-    let match;
-
-    try {
-      while ((match = base64Regex.exec(note.content)) !== null) {
-        const base64Data = match[1];
-        const newUrl = await uploadImageToCloudinary(base64Data);
-        newContent = newContent.replace(base64Data, newUrl);
-      }
-
-      const updatedNoteData = {
-        title: note.title,
-        content: newContent,
-      };
-
-      // Proceed with the note update using the new, clean content
-      const updatedNote = await updateNote(id, updatedNoteData);
-      setNote(updatedNote);
-      toast.success('Note saved!');
-
-      // Update the notes context to reflect the change
-      setNotes(prevNotes => 
-        prevNotes.map(n => n._id === updatedNote._id ? updatedNote : n)
-      );
-
-    } catch (err) {
-      console.error('Failed to save note:', err);
-      toast.error('Failed to save note. Please check the console for more details.');
-    }
-  };
-
-  const handleTitleChange = (e) => {
-    setNote({ ...note, title: e.target.value });
-  };
-
-  const handleContentChange = (newContent) => {
-    setNote({ ...note, content: newContent });
-  };
-  
-  const handleShare = async () => {
-    try {
-      const { shareUrl } = await shareNote(id);
-      setShareUrl(shareUrl);
-      setShareModalOpen(true);
-    } catch (err) {
-      toast.error('Failed to share note.');
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <Spinner />
-      </div>
-    );
   }
 
-  if (error) {
-    return (
-      <div className="flex justify-center items-center h-screen text-red-500">
-        <p>{error}</p>
-      </div>
-    );
-  }
+
+  useEffect(() => {
+    let mounted = true;
+    notesService.getNote(token, id).then((r) => {
+      if (!mounted) return;
+      if (r._id) {
+        setNote(r);
+        setTitle(r.title || "");
+        setContent(r.content || "");
+        if (r.isPublic && r.shareId)
+          setShareUrl(`${window.location.origin}/s/${r.shareId}`);
+      } else {
+        alert(r.error || "Not found");
+        navigate("/");
+      }
+    });
+    return () => (mounted = false);
+  }, [id, token]);
+
+  useDebounce(
+    async () => {
+      if (!note) return;
+      setSaving(true);
+      const res = await notesService.updateNote(token, id, { title, content });
+      setSaving(false);
+      if (res.error) console.error(res.error);
+    },
+    1500,
+    [title, content]
+  );
+
+  const remove = async () => {
+    if (!confirm("Delete?")) return;
+    await notesService.deleteNote(token, id);
+    navigate("/");
+  };
+
+  const togglePublic = async () => {
+    const res = await notesService.updateNote(token, id, {
+      isPublic: !note.isPublic,
+    });
+    if (!res.error) {
+      setNote((v) => ({
+      ...v,
+        isPublic:!v.isPublic,
+        shareId: res.shareId || v.shareId,
+      }));
+      if (!note.isPublic && res.shareId)
+        setShareUrl(`${window.location.origin}/s/${res.shareId}`);
+      if (note.isPublic) setShareUrl("");
+    }
+  };
+
+  const createShare = async () => {
+    const res = await notesService.createShare(token, id);
+    if (res.shareUrl) setShareUrl(res.shareUrl);
+  };
 
   return (
-    <div className="flex flex-col h-full bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
-      <NoteHeader
-        title={note?.title}
-        onTitleChange={handleTitleChange}
-        onShare={handleShare}
-      />
-      <div className="flex-grow p-4 md:p-8 overflow-y-auto">
-        <NoteEditor
-          content={note?.content}
-          onChange={handleContentChange}
-        />
-      </div>
-      <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)}>
-        <h2 className="text-xl font-bold">Share Note</h2>
-        <p>This is where share options will go.</p>
-        <button
-          onClick={() => setModalOpen(false)}
-          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
-        >
-          Close
-        </button>
-      </Modal>
-      {shareModalOpen && (
-        <ShareModal
-          shareUrl={shareUrl}
-          onClose={() => setShareModalOpen(false)}
-        />
-      )}
+    <div className="min-h-screen bg-[var(--color-bg-primary)]">
+      <Header />
+      <main className="p-6">
+        {!note? (
+          <div>Loading…</div>
+        ) : (
+          <div>
+            <NoteHeader
+              note={note}
+              title={title}
+              setTitle={setTitle}
+              saving={saving}
+              onTogglePublic={togglePublic}
+              onDelete={remove}
+            />
+            <NoteEditor
+              title={title}
+              setTitle={setTitle}
+              content={content}
+              setContent={setContent}
+              onSave={handleSaveNote}
+            />
+            <div className="mt-4">
+              <ShareModal shareUrl={shareUrl} onCreate={createShare} />
+            </div>
+          </div>
+        )}
+      </main>
     </div>
   );
-};
-
-export default NoteDetail;
+}
