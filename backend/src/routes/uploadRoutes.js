@@ -1,11 +1,11 @@
 import express from 'express';
 import multer from 'multer';
 import streamifier from 'streamifier';
-import cloudinary from '../config/cloudinary.js';
+import { v2 as cloudinary } from 'cloudinary';
+import { CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET } from '../config/env.js';
 
 const router = express.Router();
 
-// Configure multer to use memory storage
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB limit
@@ -18,13 +18,19 @@ const upload = multer({
   },
 });
 
-// POST /api/uploads
 router.post('/', upload.single('file'), (req, res, next) => {
   if (!req.file) {
     return res.status(400).json({ error: 'No file uploaded' });
   }
 
-  let stream = cloudinary.uploader.upload_stream(
+  // Use a direct configuration to ensure the keys are used correctly
+  cloudinary.config({
+    cloud_name: CLOUDINARY_CLOUD_NAME,
+    api_key: CLOUDINARY_API_KEY,
+    api_secret: CLOUDINARY_API_SECRET
+  });
+
+  const stream = cloudinary.uploader.upload_stream(
     { folder: 'notes-app' },
     (error, result) => {
       if (result) {
