@@ -223,10 +223,12 @@ export default function DrawingCanvas({ onInsert, onClose }) {
       });
       const json = resp.data; // axios automatically parses JSON
       if (json && json.url) return json.url;
-      return dataUrl; // Fallback to dataUrl if backend doesn't return a URL
+      // return dataUrl; // Fallback to dataUrl if backend doesn't return a URL
+      throw new Error('Backend did not return a valid URL.');
     } catch (err) {
       console.error('Upload to backend failed', err);
-      return dataUrl; // Fallback to dataUrl if upload fails
+      // return dataUrl; // Fallback to dataUrl if upload fails
+      throw err;
     }
   }
 

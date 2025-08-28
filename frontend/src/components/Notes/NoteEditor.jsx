@@ -60,37 +60,44 @@ export default function NoteEditor({ title, setTitle, content, setContent, onSav
     // Insert image markdown at cursor
     const ta = taRef.current;
     if (!ta) return;
-    const markdown = `![](${urlOrData})`;
-    const start = ta.selectionStart || 0;
-    const end = ta.selectionEnd || 0;
-    const val = ta.value || '';
-    const newVal = val.slice(0, start) + markdown + val.slice(end);
 
-    // update textarea and local state
-    ta.value = newVal;
-    if (typeof setContent === 'function') setContent(newVal);
+    // New logic: Only proceed if a valid URL is returned
+    if(urlOrData && urlOrData.startsWith('http')){
+      const markdown = `![](${urlOrData})`;
+      const start = ta.selectionStart || 0;
+      const end = ta.selectionEnd || 0;
+      const val = ta.value || '';
+      const newVal = val.slice(0, start) + markdown + val.slice(end);
 
-    // move caret and focus
-    const pos = start + markdown.length;
-    ta.selectionStart = ta.selectionEnd = pos;
-    ta.focus();
+      // update textarea and local state
+      ta.value = newVal;
+      if (typeof setContent === 'function') setContent(newVal);
 
-    // Persist the note immediately (so share will include the image)
-    if (typeof onSave === 'function') {
-      try {
-        // Call onSave with latest title + content and wait for it (onSave should call notesService.updateNote)
-        await onSave({ title, content: newVal });
-        toast?.success?.('Drawing inserted and note saved');
-      } catch (err) {
-        console.error('Failed to save note after inserting drawing', err);
-        toast?.error?.('Inserted drawing but failed to save note');
-        // still close the modal — content updated locally
+      // move caret and focus
+      const pos = start + markdown.length;
+      ta.selectionStart = ta.selectionEnd = pos;
+      ta.focus();
+
+      // Persist the note immediately (so share will include the image)
+      if (typeof onSave === 'function') {
+        try {
+          // Call onSave with latest title + content and wait for it (onSave should call notesService.updateNote)
+          await onSave({ title, content: newVal });
+          toast?.success?.('Drawing inserted and note saved');
+        } catch (err) {
+          console.error('Failed to save note after inserting drawing', err);
+          toast?.error?.('Inserted drawing but failed to save note');
+          // still close the modal — content updated locally
+        }
+      } else {
+        // No onSave provided — just give user feedback (note is updated in state)
+        toast?.success?.('Drawing inserted (not auto-saved)');
       }
-    } else {
-      // No onSave provided — just give user feedback (note is updated in state)
-      toast?.success?.('Drawing inserted (not auto-saved)');
+    }else{
+      // If the upload failed, the urlOrData would be a data url.
+      // Instead of inserting it, we just show an error.
+      toast?.error?.('Failed to insert drawing. Please try again.');
     }
-
     setShowDrawing(false);
   }
 
