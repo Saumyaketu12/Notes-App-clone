@@ -179,39 +179,11 @@ export default function DrawingCanvas({ onInsert, onClose }) {
     ctx.clearRect(0,0,canvas.clientWidth,canvas.clientHeight);
   }
 
-  function exportDataUrl() {
+  async function uploadDrawing() {
     const canvas = canvasRef.current;
-    return canvas.toDataURL('image/png');
-  }
-
-  async function uploadDataUrl(dataUrl) {
-    // if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_UPLOAD_PRESET) {
-    //   console.error('Cloudinary credentials not set in environment variables.');
-    //   // Fallback to dataUrl if Cloudinary is not configured
-    //   return dataUrl;
-    // }
-
-    // Convert dataUrl to Blob
-    const res = await fetch(dataUrl);
-    const blob = await res.blob();
-
-    //This is to upload the picture directly from frontend to cloudinary
-    // const formData = new FormData();
-    // formData.append("file", blob);
-    // formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET); // Use unsigned preset
-
-    // try {
-    //   const cloudinaryResponse = await axios.post(
-    //     `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
-    //     formData
-    //   );
-    //   return cloudinaryResponse.data.secure_url;
-    // } catch (err) {
-    //   console.error('Cloudinary upload failed', err);
-    //   // Fallback to dataUrl if upload fails
-    //   return dataUrl;
-    // }
-
+    // Use toBlob to get a Blob directly from the canvas
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+    
     const fd = new FormData();
     fd.append('file', blob, 'drawing.png');
     try {
@@ -223,11 +195,9 @@ export default function DrawingCanvas({ onInsert, onClose }) {
       });
       const json = resp.data; // axios automatically parses JSON
       if (json && json.url) return json.url;
-      // return dataUrl; // Fallback to dataUrl if backend doesn't return a URL
       throw new Error('Backend did not return a valid URL.');
     } catch (err) {
       console.error('Upload to backend failed', err);
-      // return dataUrl; // Fallback to dataUrl if upload fails
       throw err;
     }
   }
@@ -261,8 +231,7 @@ export default function DrawingCanvas({ onInsert, onClose }) {
 
           <div className="ml-auto flex gap-2">
             <button className="px-3 py-1 bg-green-600 text-white rounded" onClick={async ()=>{
-              const urlOrData = exportDataUrl();
-              const uploaded = await uploadDataUrl(urlOrData);
+              const uploaded = await uploadDrawing();
               onInsert && onInsert(uploaded);
             }}>Insert drawing</button>
             <button className="px-3 py-1 border rounded" onClick={()=>{ const a = document.createElement('a'); a.href=exportDataUrl(); a.download='drawing.png'; a.click(); }}>Download</button>
