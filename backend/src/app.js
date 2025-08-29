@@ -21,16 +21,19 @@ const __dirname = path.dirname(__filename);
 app.use(helmet());
 app.use(express.json({ limit: '5mb' })); // increase limit if needed
 app.use(morgan('dev'));
-
+// app.use(cors({ origin: APP_ORIGIN || true }));
 app.use(cors({
-  origin: APP_ORIGIN,
+  origin: [
+    'http://localhost:5173',  // vite dev
+    'https://saumyaketu-notes-app.onrender.com', // deployed frontend
+  ],
   credentials: true,
 }));
 
 
 
 // Serve uploaded files (public) - This might not be needed if all uploads are external
-// app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes
 app.use('/api/auth', authRoutes);
