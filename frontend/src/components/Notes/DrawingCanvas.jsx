@@ -193,7 +193,7 @@ export default function DrawingCanvas({ onInsert, onClose }) {
     
     try {
       // Use the imported api instance
-      const resp = await api.post('/uploads', fd, {
+      const resp = await api.post('/api/uploads', fd, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
