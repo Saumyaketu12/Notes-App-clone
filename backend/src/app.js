@@ -25,7 +25,7 @@ app.use(morgan('dev'));
 app.use(cors({
   origin: [
     'http://localhost:5173',  // vite dev
-    'https://saumyaketu-notes-app.onrender.com', // deployed frontend
+    'https://saumyaketu-notes-app-clone.onrender.com', // deployed frontend
   ],
   credentials: true,
 }));
